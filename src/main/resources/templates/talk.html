@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>我的WebSocket</title>
+    <style>
+        #message{
+            width:500px;overflow-y: scroll;overflow-x:hidden;border: 2px solid;
+            background-color: #cde1f0;height: 350px;
+        }
+        #message table {width:500px;padding-right: 20px;}
+        #message table tr {list-style-type: none;}
+        #message table tr div{width:auto;max-width: 250px;border: 2px solid;padding: 5px;}
+        #message .right{
+            background-color: #fff;
+            float: right;
+            border-top-right-radius: 40px;
+            border-top-left-radius: 35px;
+            border-bottom-left-radius: 35px;
+        }
+        #message .left {
+            background-color: #bbdc95;
+            float: left;
+            border-top-left-radius: 40px;
+            border-top-right-radius: 35px;
+            border-bottom-right-radius: 35px;
+        }
+        #btnDiv{
+            width:500px;
+        }
+        #text{
+            padding-top: 10px;margin-top: 10px;
+        }
+        #sndBtn{
+            width: 60px;height: 90px;float:right;margin-top: 10px;margin-right: 92px;
+        }
+        #closeBtn{
+            width: 70px;height: 90px;float:right;margin-top: -93px;margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="message">
+    <table>
+        <tbody id="msg">
+
+        </tbody>
+    </table>
+</div>
+
+<!--<input id="text" type="text" style="width:180px;"/>-->
+<div id="btnDiv">
+    <textarea id="text" rows="5" cols="45"></textarea>
+    <button id="sndBtn" onclick="send()">发送</button>
+    <button id="closeBtn" onclick="closeWebSocket()">关闭连接</button>
+</div>
+</body>
+
+<script type="text/javascript">
+    var websocket = null;
+
+    //判断当前浏览器是否支持WebSocket, 主要此处要更换为自己的地址
+    if ('WebSocket' in window) {
+        websocket = new WebSocket("ws://localhost:8580/ws/test/oneToMany");
+    } else {
+        alert('Not support websocket')
+    }
+
+    //连接发生错误的回调方法
+    websocket.onerror = function() {
+        setMessageInnerHTML("error");
+    };
+
+    //连接成功建立的回调方法
+    websocket.onopen = function(event) {
+        //setMessageInnerHTML("open");
+    }
+
+    //接收到消息的回调方法
+    websocket.onmessage = function(event) {
+        setMessageInnerHTML(event.data,"1");
+    }
+
+    //连接关闭的回调方法
+    websocket.onclose = function() {
+        setMessageInnerHTML("程序已关闭");
+    }
+
+    //监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+    window.onbeforeunload = function() {
+        websocket.close();
+    }
+
+    //将消息显示在网页上
+    function setMessageInnerHTML(innerHTML,align) {
+        //上层div
+        let b = document.createElement("tr");
+
+        //文本div
+        let m = document.createElement("div");
+
+        //接收的消息
+        if(align == "1"){
+           m.className="right";
+        }else{
+
+            m.className="left";
+        }
+
+        m.innerText = innerHTML;
+
+        b.appendChild(m);
+        document.getElementById("msg").appendChild(b);
+
+        let div = document.getElementById("message");
+        div.scrollTop = div.scrollHeight;
+    }
+
+    //关闭连接
+    function closeWebSocket() {
+        websocket.close();
+    }
+
+    //发送消息
+    function send() {
+        var message = document.getElementById('text').value;
+        //自己发送的消息
+        setMessageInnerHTML(message,"0");
+
+        websocket.send(message);
+    }
+</script>
+</html>
